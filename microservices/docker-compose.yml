@@ -1,0 +1,58 @@
+version: '3.7'
+services:
+
+  netflix-eureka-naming-server:
+    image: in28min/netflix-eureka-naming-server:0.0.1-SNAPSHOT
+    #build:
+      #context: netflix-eureka-naming-server
+      #dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    #restart: always
+    networks:
+      - niv-network
+
+  zuul-api-gateway:
+    image: in28min/netflix-zuul-api-gateway-server:0.0.1-SNAPSHOT
+    #build:
+      #context: netflix-zuul-api-gateway-server
+      #dockerfile: Dockerfile
+    ports:
+      - "8765:8765"
+    #restart: always
+    depends_on:
+      - naming-server
+    networks:
+      - niv-network
+
+  currency-exchange-service:
+    image: niv214/currency-exchange-service:1.0.0.RELEASE
+    #build:
+      #context: currency-exchange-service
+      #dockerfile: Dockerfile    
+    #environment:
+      #RABBIT_URI: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "8000:8000"
+    #restart: always
+    depends_on:
+      - netflix-eureka-naming-server
+    networks:
+      - niv-network
+
+  currency-conversion-service:
+    image: niv214/currency-conversion-service:1.0.0.RELEASE
+    #build:
+      #context: currency-conversion-service
+      #dockerfile: Dockerfile    
+    ports:
+      - "8100:8100"
+    depends_on:
+      - currency-exchange-service
+      - netflix-eureka-naming-server
+    networks:
+      - niv-network
+  
+# Networks to be created to facilitate communication between containers
+networks:
+  niv-network:
